@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lequelFX_scan.Gui_scan_controller">
+<top><HBox prefHeight="51.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+<children><ChoiceBox fx:id="liste_disques" prefHeight="25.0" prefWidth="306.0" /><Button fx:id="bouton_scanner" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="25.0" prefWidth="155.0" text="Scanner" textAlignment="CENTER">
+<HBox.margin>
+<Insets left="50.0" />
+</HBox.margin></Button>
+</children>
+<BorderPane.margin>
+<Insets top="20.0" />
+</BorderPane.margin></HBox>
+</top>
+<center><VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+<children><Label fx:id="label_progress_" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="Label" textAlignment="CENTER" /><ProgressBar fx:id="progress_" prefHeight="20.0" prefWidth="826.0" progress="0.0" />
+</children>
+<BorderPane.margin>
+<Insets left="20.0" right="20.0" />
+</BorderPane.margin></VBox>
+</center>
+<bottom><HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+<children><TreeView fx:id="tree" prefHeight="100.0" prefWidth="804.0" />
+</children></HBox>
+</bottom></BorderPane>
