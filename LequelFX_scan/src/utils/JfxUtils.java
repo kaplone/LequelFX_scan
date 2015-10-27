@@ -1,9 +1,10 @@
-package lequelFX_scan;
+package utils;
 
 import java.io.IOException;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import lequelFX_scan.Main;
 
 public class JfxUtils {
 	

@@ -2,6 +2,7 @@ package lequelFX_scan;
 	
 import javafx.application.Application;
 import javafx.stage.Stage;
+import utils.JfxUtils;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 

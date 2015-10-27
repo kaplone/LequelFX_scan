@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.ResourceBundle;
 
+import org.bson.types.ObjectId;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -26,6 +28,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import models.Scan;
+import utils.MongoConn;
+import utils.Walk;
 
 public class Gui_scan_controller implements Initializable {
 	
@@ -69,9 +74,12 @@ public class Gui_scan_controller implements Initializable {
 	
 	private int index;
 	
+	private static Scan scan;
+	private static ObjectId scanId;
 	
-
-	
+	private FileVisitor<Path> fileVisitor ;
+	private FileVisitor<Path> scanVisitor ;
+		
 	private void refreshList(){
 		
 		collec_disques.clear();
@@ -100,6 +108,40 @@ public class Gui_scan_controller implements Initializable {
 	@FXML
 	public void on_scanner_button(){
 		
+		Scan precedent = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
+		
+		System.out.println(precedent);
+
+		scan = new Scan();
+		scan.setDate(Date.from(Instant.now()));
+		scan.setDisque(nom_du_disque.toString());
+		
+		if (precedent != null){
+			scan.setNext(precedent.getNext() + 1);
+			precedent.setRang(precedent.getNext());
+			MongoConn.getCollScans().update("{_id : #}", precedent.get_id()).with(precedent);
+		}
+		else {
+			scan.setNext(1);	
+		}
+		scan.setRang(0);
+		
+		MongoConn.getCollScans().save(scan);
+		
+		scanId = scan.get_id();
+		
+		try {
+			System.out.println(chemin_du_disque);
+			System.out.println(nom_du_disque);
+			System.out.println(chemin_du_disque.resolve(nom_du_disque));
+			System.out.println(scanVisitor);
+			
+			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), scanVisitor);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 	public void afficher_infos_disque(){
@@ -110,8 +152,9 @@ public class Gui_scan_controller implements Initializable {
         nombre_de_elements_erreur = 0;
         
         date_derniere_modification_vue = Instant.EPOCH;
+        date_dernier_scan = null;
 
-		FileVisitor<Path> fileVisitor = new Walk.FileSizeVisitor();
+		
 		try {
 			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), fileVisitor);
 		} catch (IOException e) {
@@ -120,7 +163,7 @@ public class Gui_scan_controller implements Initializable {
 		
 		//date_dernier_scan_label.setText(date_dernier_scan.toInstant().toString());
 		date_derniere_modif_label.setText(date_derniere_modification_vue.toString());
-		nombre_elements_label.setText(String.format("%s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus));
+		nombre_elements_label.setText(String.format("%s / %s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus, nombre_de_elements_erreur));
 
 	}
 	
@@ -137,6 +180,9 @@ public class Gui_scan_controller implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 		
+		fileVisitor = new Walk.FileSizeVisitor();
+		scanVisitor = new Walk.FileScanVisitor();
+		
 		collec_disques = FXCollections.observableArrayList();
 		
 		liste_disques_choiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
@@ -149,7 +195,9 @@ public class Gui_scan_controller implements Initializable {
 					afficher_infos_disque();
 				}
 		      }
-		    });
+		 });
+		
+		MongoConn .connecter("Lequel_new_test", "Lequel_scans_new_test");
 		
 		liste_disques_choiceBox.setItems(collec_disques);
 		refreshList();
@@ -163,5 +211,22 @@ public class Gui_scan_controller implements Initializable {
 	public static void setDate_derniere_modification_vue(Instant date_derniere_modification_vue) {
 		Gui_scan_controller.date_derniere_modification_vue = date_derniere_modification_vue;
 	}
+
+	public static ObjectId getScanId() {
+		return scanId;
+	}
+
+	public static void setScanId(ObjectId scanId) {
+		Gui_scan_controller.scanId = scanId;
+	}
+
+	public static Path getNom_du_disque() {
+		return nom_du_disque;
+	}
+
+	public static void setNom_du_disque(Path nom_du_disque) {
+		Gui_scan_controller.nom_du_disque = nom_du_disque;
+	}
+	
 
 }
