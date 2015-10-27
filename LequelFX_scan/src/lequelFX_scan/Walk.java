@@ -7,12 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
 
 public class Walk {
 
-	public static void main(String[] args) {
-		Path homeFolder = Paths.get("/home/autor/Desktop/tests_select/soletanche");
-		FileVisitor<Path> fileVisitor = new FileSizeVisitor(new Long(50));
+	public static void main_(Path homeFolder) {
+		//Path  = Paths.get("/home/autor/Desktop/tests_select/soletanche");
+		FileVisitor<Path> fileVisitor = new FileSizeVisitor();
 		try {
 			Files.walkFileTree(homeFolder, fileVisitor);
 		} catch (IOException e) {
@@ -22,12 +23,8 @@ public class Walk {
   
 	
 	static class FileSizeVisitor implements FileVisitor<Path> {
-
-		private Long size;
-
-		public FileSizeVisitor(Long size) {
-			this.size = size;
-		}
+		
+		
 
 		/**
 		 * This is triggered before visiting a directory.
@@ -35,6 +32,13 @@ public class Walk {
 		@Override
 		public FileVisitResult preVisitDirectory(Path path,
 				BasicFileAttributes attrs) throws IOException {
+
+			if (path.getFileName().toString().startsWith(".")){
+				return FileVisitResult.SKIP_SUBTREE;
+			}
+			else{
+			    Gui_scan_controller.dossiers_vus_plus_1();
+			}
 			return FileVisitResult.CONTINUE;
 		}
 
@@ -44,9 +48,17 @@ public class Walk {
 		@Override
 		public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
 				throws IOException {
-			
-			
+	
+			if (path.getFileName().toString().startsWith(".")){
 
+			}
+			else {
+				Gui_scan_controller.fichiers_vus_plus_1();
+				BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+				 if (attr.lastModifiedTime().toInstant().compareTo(Gui_scan_controller.getDate_derniere_modification_vue()) > 0){
+					 Gui_scan_controller.setDate_derniere_modification_vue(attr.lastModifiedTime().toInstant());
+				 }
+			}
 			return FileVisitResult.CONTINUE;
 		}
 
@@ -58,8 +70,8 @@ public class Walk {
 		public FileVisitResult visitFileFailed(Path path, IOException exc)
 				throws IOException {
 			// We print the error
+			Gui_scan_controller.elements_erreur_plus_1();
 			System.err.println("ERROR: Cannot visit path: " + path);
-			// We continue the folder walk
 			return FileVisitResult.CONTINUE;
 		}
 
@@ -69,14 +81,8 @@ public class Walk {
 		@Override
 		public FileVisitResult postVisitDirectory(Path path, IOException exc)
 				throws IOException {
-			// We continue the folder walk
 			return FileVisitResult.CONTINUE;
 		}
-		
-		String base = "/home/autor/Desktop/tests_select/soleta";
-		
-
-
 	}
 
 }

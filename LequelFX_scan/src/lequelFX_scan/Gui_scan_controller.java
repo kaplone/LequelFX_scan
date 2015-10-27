@@ -10,8 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.util.Date;
 import java.util.ResourceBundle;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,25 +30,46 @@ import javafx.scene.control.ProgressBar;
 public class Gui_scan_controller implements Initializable {
 	
 	@FXML
-	private ChoiceBox<String> liste_disques;
+	private ChoiceBox<String> liste_disques_choiceBox;
 	
 	@FXML
-	private Button bouton_scanner;
+	private Button scanner_button;
+	@FXML
+	private Button rafraichir_button;
 	
 	@FXML
-	private Label label_progress_;
+	private Label progress_label;
+	@FXML
+	private Label date_dernier_scan_label;
+	@FXML
+	private Label date_derniere_modif_label;
+	@FXML
+	private Label nombre_elements_label;
+	
+	
 	
 	@FXML
-	private ProgressBar progress_;
+	private ProgressBar progress_progressBar;
 	
 	
-	private ObservableList<String> collec_disques = FXCollections.observableArrayList();
+	private ObservableList<String> collec_disques;
 	
-	private Path homeFolder;
+	private static int nombre_de_fichiers_vus;     
+	private static int nombre_de_dossiers_vus;
+	private static int nombre_elements_vus;
+	private static int nombre_de_elements_erreur;
+	private static Date date_dernier_scan;
+	private static Instant date_derniere_modification_vue;
+	private static Path chemin_du_disque;
+	private static Path nom_du_disque;
 	
-    private static int nombre_f = 0; 
-    private static int nombre_d = 0; 
-    private static int nombre_f_e = 0; 
+	private static int nombre_de_fichiers_copies;     
+	private static int nombre_de_dossiers_copies;
+	private static int nombre_elements_copies; 
+	
+	private int index;
+	
+	
 
 	
 	private void refreshList(){
@@ -52,106 +77,91 @@ public class Gui_scan_controller implements Initializable {
 		collec_disques.clear();
 		
 		collec_disques.add("choisir un disque");
-		collec_disques.addAll(new File("/").list());
 		
-		liste_disques.getSelectionModel().select(0);
+		if (new File("/Volumes").isDirectory()){
+			collec_disques.addAll(new File("/Volumes").list());
+			chemin_du_disque = Paths.get("/Volumes");
+		}
+		else {
+			collec_disques.addAll(new File("/run/media/autor").list());
+			chemin_du_disque = Paths.get("/run/media/autor");
+		}
+		
+		
+		liste_disques_choiceBox.getSelectionModel().select(0);
+	}
+
+	@FXML
+	public void on_rafraichir_button(){
+		refreshList();
+		
+		
+	}
+	@FXML
+	public void on_scanner_button(){
+		
+	}
+	
+	public void afficher_infos_disque(){
+		
+		nombre_de_fichiers_vus = 0;     
+        nombre_de_dossiers_vus = 0;
+        nombre_elements_vus = 0; 
+        nombre_de_elements_erreur = 0;
+        
+        date_derniere_modification_vue = Instant.EPOCH;
+
+		FileVisitor<Path> fileVisitor = new Walk.FileSizeVisitor();
+		try {
+			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), fileVisitor);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//date_dernier_scan_label.setText(date_dernier_scan.toInstant().toString());
+		date_derniere_modif_label.setText(date_derniere_modification_vue.toString());
+		nombre_elements_label.setText(String.format("%s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus));
+
+	}
+	
+	public static void dossiers_vus_plus_1(){
+		nombre_de_dossiers_vus ++;
+	}
+	public static void fichiers_vus_plus_1(){
+		nombre_de_fichiers_vus ++;
+	}
+	public static void elements_erreur_plus_1(){
+		nombre_de_elements_erreur ++;
 	}
 		
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 		
-		liste_disques.setItems(collec_disques);
-		refreshList();
+		collec_disques = FXCollections.observableArrayList();
 		
-		bouton_scanner.setOnAction(new EventHandler<ActionEvent>() {
-			
-			
-        
-			
-			@Override
-			public void handle(ActionEvent event) {
-				
-				nombre_f = 0;     
-		        nombre_d = 0;
-		        nombre_f_e = 0;     
-				
-				homeFolder = Paths.get("/" + liste_disques.getSelectionModel().getSelectedItem());
-		
-				FileVisitor<Path> fileVisitor = new FileSizeVisitor();
-				try {
-					Files.walkFileTree(homeFolder, fileVisitor);
-				} catch (IOException e) {
-					e.printStackTrace();
+		liste_disques_choiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+
+		      @Override
+		      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+  
+		        if ((int) number2 != 0){
+		        	nom_du_disque = Paths.get(collec_disques.get((int) number2)); 
+					afficher_infos_disque();
 				}
-				
-				System.out.println((nombre_f + nombre_d ) + " total");
-
-				
-			}
-		});
+		      }
+		    });
 		
-	}
+		liste_disques_choiceBox.setItems(collec_disques);
+		refreshList();
 	
-	static class FileSizeVisitor implements FileVisitor<Path> {
-
-		/**
-		 * This is triggered before visiting a directory.
-		 */
-		@Override
-		public FileVisitResult preVisitDirectory(Path path,
-				BasicFileAttributes attrs) throws IOException {
-
-			if (path.getFileName().toString().startsWith(".")){
-				return FileVisitResult.SKIP_SUBTREE;
-			}
-			else{
-			    nombre_d ++;
-			}
-			return FileVisitResult.CONTINUE;
-		}
-
-		/**
-		 * This is triggered when we visit a file.
-		 */
-		@Override
-		public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
-				throws IOException {
-	
-			if (path.getFileName().toString().startsWith(".")){
-
-			}
-			else {
-                nombre_f ++;
-			}
-			return FileVisitResult.CONTINUE;
-		}
-
-		/**
-		 * This is triggered if we cannot visit a Path We log the fact we cannot
-		 * visit a specified path .
-		 */
-		@Override
-		public FileVisitResult visitFileFailed(Path path, IOException exc)
-				throws IOException {
-			// We print the error
-			nombre_f_e ++;
-			System.err.println("ERROR: Cannot visit path: " + path);
-			return FileVisitResult.CONTINUE;
-		}
-
-		/**
-		 * This is triggered after we finish visiting a specified folder.
-		 */
-		@Override
-		public FileVisitResult postVisitDirectory(Path path, IOException exc)
-				throws IOException {
-			return FileVisitResult.CONTINUE;
-		}
-
-		
-
 	}
 
-	
+	public static Instant getDate_derniere_modification_vue() {
+		return date_derniere_modification_vue;
+	}
+
+	public static void setDate_derniere_modification_vue(Instant date_derniere_modification_vue) {
+		Gui_scan_controller.date_derniere_modification_vue = date_derniere_modification_vue;
+	}
 
 }

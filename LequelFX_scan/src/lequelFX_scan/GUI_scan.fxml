@@ -6,21 +6,64 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lequelFX_scan.Gui_scan_controller">
-<top><HBox prefHeight="51.0" prefWidth="800.0" BorderPane.alignment="CENTER">
-<children><ChoiceBox fx:id="liste_disques" prefHeight="25.0" prefWidth="306.0" /><Button fx:id="bouton_scanner" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="25.0" prefWidth="155.0" text="Scanner" textAlignment="CENTER">
+<top><HBox prefHeight="128.0" prefWidth="780.0" BorderPane.alignment="CENTER">
+<children>
+<VBox>
+<children><ChoiceBox fx:id="liste_disques_choiceBox" prefHeight="25.0" prefWidth="306.0" /><HBox prefHeight="100.0" prefWidth="200.0">
+<children>
+<HBox alignment="CENTER" prefHeight="78.0" prefWidth="294.0">
+<children><Button fx:id="rafraichir_button" mnemonicParsing="false" onAction="#on_rafraichir_button" text="Rafraîchir la liste des disques" />
+</children>
+</HBox>
+</children></HBox>
+<HBox alignment="CENTER">
+<children><Button fx:id="scanner_button" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#on_scanner_button" prefHeight="25.0" prefWidth="155.0" text="Scanner" textAlignment="CENTER">
 <HBox.margin>
-<Insets left="50.0" />
+<Insets />
 </HBox.margin></Button>
 </children>
+</HBox>
+</children>
+</VBox><VBox prefHeight="128.0" prefWidth="476.0">
+<children><HBox prefHeight="100.0" prefWidth="200.0">
+<children><Label alignment="CENTER_RIGHT" prefHeight="15.0" prefWidth="279.0" text="Date dernier scan : ">
+<HBox.margin>
+<Insets left="10.0" right="10.0" top="5.0" />
+</HBox.margin></Label><Label fx:id="date_dernier_scan_label" text="aucun">
+<HBox.margin>
+<Insets top="5.0" />
+</HBox.margin></Label>
+</children></HBox><HBox prefHeight="100.0" prefWidth="200.0">
+<children><Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="15.0" prefWidth="278.0" text="Date dernière modification sur disque : ">
+<HBox.margin>
+<Insets left="10.0" right="10.0" top="5.0" />
+</HBox.margin></Label><Label fx:id="date_derniere_modif_label" text="maintenant">
+<HBox.margin>
+<Insets top="5.0" />
+</HBox.margin></Label>
+</children></HBox><HBox prefHeight="100.0" prefWidth="200.0">
+<children><Label alignment="CENTER_RIGHT" prefHeight="15.0" prefWidth="278.0" text="Nombre de dossiers / fichiers / erreurs : ">
+<HBox.margin>
+<Insets left="10.0" right="10.0" top="5.0" />
+</HBox.margin></Label><Label fx:id="nombre_elements_label" text="0 / 0">
+<HBox.margin>
+<Insets top="5.0" />
+</HBox.margin></Label>
+</children></HBox>
+</children>
+<HBox.margin>
+<Insets left="20.0" />
+</HBox.margin></VBox>
+</children>
 <BorderPane.margin>
-<Insets top="20.0" />
+<Insets left="10.0" right="10.0" top="20.0" />
 </BorderPane.margin></HBox>
 </top>
 <center><VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
-<children><Label fx:id="label_progress_" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="Label" textAlignment="CENTER" /><ProgressBar fx:id="progress_" prefHeight="20.0" prefWidth="826.0" progress="0.0" />
+<children><HBox prefHeight="100.0" prefWidth="200.0" /><Label fx:id="progress_label" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="0 %" textAlignment="CENTER" /><ProgressBar fx:id="progress_progressBar" prefHeight="20.0" prefWidth="826.0" progress="0.0" />
 </children>
 <BorderPane.margin>
-<Insets left="20.0" right="20.0" />
+<Insets left="10.0" right="10.0" />
 </BorderPane.margin></VBox>
 </center>
 <bottom><HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
