@@ -11,6 +11,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.ResourceBundle;
 
@@ -50,6 +53,8 @@ public class Gui_scan_controller implements Initializable {
 	private Label date_derniere_modif_label;
 	@FXML
 	private Label nombre_elements_label;
+	@FXML
+	private Label nb_scans_en_base_label;
 	
 	
 	
@@ -140,7 +145,7 @@ public class Gui_scan_controller implements Initializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		afficher_infos_disque();
 		
 	}
 	
@@ -152,7 +157,8 @@ public class Gui_scan_controller implements Initializable {
         nombre_de_elements_erreur = 0;
         
         date_derniere_modification_vue = Instant.EPOCH;
-        date_dernier_scan = null;
+        Scan scan = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
+        date_dernier_scan = scan != null ? scan.getDate() : null;
 
 		
 		try {
@@ -161,10 +167,10 @@ public class Gui_scan_controller implements Initializable {
 			e.printStackTrace();
 		}
 		
-		//date_dernier_scan_label.setText(date_dernier_scan.toInstant().toString());
-		date_derniere_modif_label.setText(date_derniere_modification_vue.toString());
+		date_dernier_scan_label.setText(date_dernier_scan != null ? date_dernier_scan.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString() : "Jamais");
+		date_derniere_modif_label.setText(date_derniere_modification_vue.atZone(ZoneId.systemDefault()).toLocalDate().toString());
 		nombre_elements_label.setText(String.format("%s / %s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus, nombre_de_elements_erreur));
-
+		nb_scans_en_base_label.setText(scan != null ? scan.getNext() + " scans dans la base." : "0");
 	}
 	
 	public static void dossiers_vus_plus_1(){
