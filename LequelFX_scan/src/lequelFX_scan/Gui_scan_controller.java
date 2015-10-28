@@ -145,6 +145,7 @@ public class Gui_scan_controller implements Initializable {
 		MongoConn.getCollScans().save(scan);
 		
 		scanId = scan.get_id();
+		scan = scan;
 		
 		scanWorker = createWorker();
 		
@@ -306,6 +307,14 @@ public class Gui_scan_controller implements Initializable {
 
 	public static void setChemin_du_disque(Path chemin_du_disque) {
 		Gui_scan_controller.chemin_du_disque = chemin_du_disque;
+	}
+
+	public static Scan getScan() {
+		return scan;
+	}
+
+	public static void setScan(Scan scan) {
+		Gui_scan_controller.scan = scan;
 	}
 	
 	

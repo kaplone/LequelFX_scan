@@ -18,7 +18,11 @@ public class Element extends Commun{
 	private long taille;
 	private String chemin;
 	private String id_pere;
-	private ObjectId scanned;
+	//private ObjectId scanned_id;
+	private Scan scanned;
+	
+	
+	
 	public boolean isFichier() {
 		return fichier;
 	}
@@ -67,12 +71,19 @@ public class Element extends Commun{
 	public void setId_pere(String id_pere) {
 		this.id_pere = id_pere;
 	}
-	public ObjectId getScanned() {
+//	public ObjectId getScanned_id() {
+//		return scanned_id;
+//	}
+//	public void setScanned_id(ObjectId scanned_id) {
+//		this.scanned_id = scanned_id;
+//	}
+	public Scan getScanned() {
 		return scanned;
 	}
-	public void setScanned(ObjectId string) {
-		this.scanned = string;
+	public void setScanned(Scan scanned) {
+		this.scanned = scanned;
 	}
+
 	
 	
 

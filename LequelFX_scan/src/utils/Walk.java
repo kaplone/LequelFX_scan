@@ -177,11 +177,12 @@ public class Walk {
 					element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 							                                                         "chemin",
 							                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
-							                                                         "scanned"),
+							                                                         "scanned._id"),
 							                                                         Gui_scan_controller.getScanId())
 							                                  .as(Element.class).get_id().toString());
 				}
-				element.setScanned(Gui_scan_controller.getScanId());
+				//element.setScanned_id(Gui_scan_controller.getScanId());
+				element.setScanned(Gui_scan_controller.getScan());
 				
 				MongoConn.collBase.save(element);
 				
@@ -217,10 +218,11 @@ public class Walk {
 				element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 						                                                         "chemin",
 						                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
-						                                                         "scanned"),
+						                                                         "scanned._id"),
 						                                                         Gui_scan_controller.getScanId())
 						                                  .as(Element.class).get_id().toString());
-				element.setScanned(Gui_scan_controller.getScanId());
+				//element.setScanned_id(Gui_scan_controller.getScanId());
+				element.setScanned(Gui_scan_controller.getScan());
 				
 				MongoConn.collBase.save(element);
 				
