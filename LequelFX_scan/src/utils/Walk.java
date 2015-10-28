@@ -168,7 +168,7 @@ public class Walk {
 				element.setScan(Date.from(Instant.now()));
 				element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
 				element.setTaille(attr.size());
-				element.setChemin(path.toString());
+				element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
 				
 				if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())
 				 && ! path.getParent().getFileName().equals(Gui_scan_controller.getNom_du_disque())		
@@ -176,7 +176,7 @@ public class Walk {
 				
 					element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 							                                                         "chemin",
-							                                                         path.getParent().toString(),
+							                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
 							                                                         "scanned"),
 							                                                         Gui_scan_controller.getScanId())
 							                                  .as(Element.class).get_id().toString());
@@ -213,10 +213,10 @@ public class Walk {
 				element.setScan(Date.from(Instant.now()));
 				element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
 				element.setTaille(attr.size());
-				element.setChemin(path.toString());
+				element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
 				element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 						                                                         "chemin",
-						                                                         path.getParent().toString(),
+						                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
 						                                                         "scanned"),
 						                                                         Gui_scan_controller.getScanId())
 						                                  .as(Element.class).get_id().toString());

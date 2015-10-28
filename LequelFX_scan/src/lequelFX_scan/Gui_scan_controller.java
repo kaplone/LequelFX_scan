@@ -261,7 +261,7 @@ public class Gui_scan_controller implements Initializable {
 		      }
 		 });
 		
-		MongoConn .connecter("Lequel_new_test", "Lequel_scans_new_test");
+		MongoConn .connecter("Lequel_V04", "Lequel_V04_scans");
 		
 		liste_disques_choiceBox.setItems(collec_disques);
 		refreshList();
@@ -298,6 +298,14 @@ public class Gui_scan_controller implements Initializable {
 
 	public static void setInfo_progress(StringProperty info_progress) {
 		Gui_scan_controller.info_progress = info_progress;
+	}
+
+	public static Path getChemin_du_disque() {
+		return chemin_du_disque;
+	}
+
+	public static void setChemin_du_disque(Path chemin_du_disque) {
+		Gui_scan_controller.chemin_du_disque = chemin_du_disque;
 	}
 	
 	
