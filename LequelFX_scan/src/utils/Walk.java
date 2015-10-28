@@ -10,25 +10,76 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.Date;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import lequelFX_scan.Gui_scan_controller;
 import models.Element;
 
 public class Walk {
 
-//	public static void main_(Path homeFolder) {
-//		//Path  = Paths.get("/home/autor/Desktop/tests_select/soletanche");
-//		FileVisitor<Path> fileVisitor = new FileSizeVisitor();
-//		try {
-//			Files.walkFileTree(homeFolder, fileVisitor);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+	private static IntegerProperty nombre_de_fichiers_copies;     
+	private static IntegerProperty nombre_de_dossiers_copies;
+	private static IntegerProperty nombre_de_erreurs_copies; 
+	private static DoubleProperty nombre_total_elements_copies; 
+	private static DoubleProperty pourcentage_copie;
+	
+	private static String message; 
+	
+	public static void dossiers_copies_plus_1(){
+		nombre_de_dossiers_copies.set(nombre_de_dossiers_copies.get() + 1);
+	}
+	public static void fichiers_copies_plus_1(){
+		nombre_de_fichiers_copies.set(nombre_de_fichiers_copies.get() + 1);
+	}
+	public static void erreurs_copies_plus_1(){
+		nombre_de_erreurs_copies.set(nombre_de_erreurs_copies.get() + 1);
+	}
+	
+	public static void init(int nombre_total_elements_vus){
+		
+		message = "0.0 %";
+		
+		nombre_de_fichiers_copies = new SimpleIntegerProperty(1);
+		nombre_de_dossiers_copies = new SimpleIntegerProperty(0);
+		nombre_de_erreurs_copies = new SimpleIntegerProperty(0);
+		nombre_total_elements_copies = new SimpleDoubleProperty(0);
+		pourcentage_copie = new SimpleDoubleProperty(15);
+	
+		nombre_de_fichiers_copies.addListener(
+		            (ObservableValue<? extends Number> ov, Number old_val, 
+		            Number new_val) -> {
+		            	nombre_total_elements_copies.set(Double.parseDouble(new_val.toString()) + nombre_de_dossiers_copies.get() + nombre_de_erreurs_copies.get());
+		        });
+		nombre_de_dossiers_copies.addListener(
+	            (ObservableValue<? extends Number> ov, Number old_val, 
+	            Number new_val) -> {
+	            	nombre_total_elements_copies.set(Double.parseDouble(new_val.toString()) + nombre_de_fichiers_copies.get() + nombre_de_erreurs_copies.get());
+	        });
+		nombre_de_erreurs_copies.addListener(
+	            (ObservableValue<? extends Number> ov, Number old_val, 
+	            Number new_val) -> {
+	            	nombre_total_elements_copies.set(Double.parseDouble(new_val.toString()) + nombre_de_dossiers_copies.get() + nombre_de_fichiers_copies.get());  
+	        });
+		nombre_total_elements_copies.addListener(
+	            (ObservableValue<? extends Number> ov, Number old_val, 
+	            Number new_val) -> {
+	            	pourcentage_copie.set(Double.parseDouble(new_val.toString()) / nombre_total_elements_vus);  
+	            	message = String.format("% 6d / % 6d / % 6d     % 3.2f",
+																	          nombre_de_dossiers_copies.get(),
+																	          nombre_de_fichiers_copies.get(),
+																	          nombre_de_erreurs_copies.get(),
+																	          pourcentage_copie.get() * 100 
+	      		          ) + "%";
+	        });
+	}
   
 	
 	public static class FileSizeVisitor implements FileVisitor<Path> {
-		
-		
 
 		/**
 		 * This is triggered before visiting a directory.
@@ -37,7 +88,9 @@ public class Walk {
 		public FileVisitResult preVisitDirectory(Path path,
 				BasicFileAttributes attrs) throws IOException {
 
-			if (path.getFileName().toString().startsWith(".")){
+			if (path.getFileName().toString().startsWith(".")
+			 || path.getFileName().toString().startsWith("@")
+			 || path.getFileName().toString().startsWith("$")){
 				return FileVisitResult.SKIP_SUBTREE;
 			}
 			else{
@@ -53,7 +106,9 @@ public class Walk {
 		public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
 				throws IOException {
 	
-			if (path.getFileName().toString().startsWith(".")){
+			if (path.getFileName().toString().startsWith(".")
+			 || path.getFileName().toString().startsWith("@")
+			 || path.getFileName().toString().startsWith("$")){
 
 			}
 			else {
@@ -74,7 +129,7 @@ public class Walk {
 		public FileVisitResult visitFileFailed(Path path, IOException exc)
 				throws IOException {
 			// We print the error
-			Gui_scan_controller.elements_erreur_plus_1();
+			Gui_scan_controller.erreurs_vues_plus_1();
 			System.err.println("ERROR: Cannot visit path: " + path);
 			return FileVisitResult.CONTINUE;
 		}
@@ -99,36 +154,25 @@ public class Walk {
 				BasicFileAttributes attrs) throws IOException {
 
 			if (path.getFileName().toString().startsWith(".")
-		     ||	path.getFileName().toString().startsWith("$")){
+		     ||	path.getFileName().toString().startsWith("$")
+		     || path.getFileName().toString().startsWith("@")){
 				return FileVisitResult.SKIP_SUBTREE;
 			}
 			else{
-			    //Gui_scan_controller.dossiers_vus_plus_1();
 				
                 BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
 				
 				Element element = new Element();
 				element.setFichier(false);
-				//element.setExtension(path.getFileName().toString().split("\\.").length > 1 ? path.getFileName().toString().split("\\.")[path.getFileName().toString().split("\\.").length -1] : "");
 				element.setNom(path.getFileName().toString().split("\\.")[0]);
 				element.setScan(Date.from(Instant.now()));
 				element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
 				element.setTaille(attr.size());
 				element.setChemin(path.toString());
 				
-				System.out.println("path : " + path);
-				System.out.println("path.getFileName() : " + path.getFileName());
-				System.out.println("path.getParent() : " + path.getParent());
-				
 				if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())
 				 && ! path.getParent().getFileName().equals(Gui_scan_controller.getNom_du_disque())		
 						){
-					
-					System.out.println(String.format("{\"%s\" : \"%s\", \"%s\" : \"%s\"}",
-							                                                         "chemin",
-							                                                         path.getParent().toString(),
-							                                                         "scanned",
-							                                                         Gui_scan_controller.getScanId()));
 				
 					element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 							                                                         "chemin",
@@ -140,6 +184,8 @@ public class Walk {
 				element.setScanned(Gui_scan_controller.getScanId());
 				
 				MongoConn.collBase.save(element);
+				
+				dossiers_copies_plus_1();
 			}
 			return FileVisitResult.CONTINUE;
 		}
@@ -152,11 +198,11 @@ public class Walk {
 				throws IOException {
 	
 			if (path.getFileName().toString().startsWith(".")
-			||	path.getFileName().toString().startsWith("$")){
+			 || path.getFileName().toString().startsWith("@")
+			 || path.getFileName().toString().startsWith("$")){
 
 			}
 			else {
-//				Gui_scan_controller.fichiers_vus_plus_1();
 				
 				BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
 				
@@ -178,7 +224,7 @@ public class Walk {
 				
 				MongoConn.collBase.save(element);
 				
-				
+				fichiers_copies_plus_1();
 
 			}
 			return FileVisitResult.CONTINUE;
@@ -194,6 +240,7 @@ public class Walk {
 			// We print the error
 			//Gui_scan_controller.elements_erreur_plus_1();
 			System.err.println("ERROR: Cannot visit path: " + path);
+			erreurs_copies_plus_1();
 			return FileVisitResult.CONTINUE;
 		}
 
@@ -206,5 +253,30 @@ public class Walk {
 			return FileVisitResult.CONTINUE;
 		}
 	}
+
+	public static String getMessage() {
+		return message;
+	}
+
+
+	public static void setMessage(String message) {
+		Walk.message = message;
+	}
+
+
+	public static double getPourcentage_copie() {
+		return pourcentage_copie.get();
+	}
+
+
+	public static void setPourcentage_copie(double pourcentage_copie) {
+		Walk.pourcentage_copie.set(pourcentage_copie);
+	}
+	
+	public static DoubleProperty pourcentageProperty(){
+		return pourcentage_copie;
+	}
+    
+    
 
 }

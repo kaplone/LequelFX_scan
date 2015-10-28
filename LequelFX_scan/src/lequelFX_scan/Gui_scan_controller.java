@@ -19,10 +19,18 @@ import java.util.ResourceBundle;
 
 import org.bson.types.ObjectId;
 
+import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -55,6 +63,8 @@ public class Gui_scan_controller implements Initializable {
 	private Label nombre_elements_label;
 	@FXML
 	private Label nb_scans_en_base_label;
+	@FXML
+	private Label trace_label;
 	
 	
 	
@@ -66,16 +76,15 @@ public class Gui_scan_controller implements Initializable {
 	
 	private static int nombre_de_fichiers_vus;     
 	private static int nombre_de_dossiers_vus;
-	private static int nombre_elements_vus;
-	private static int nombre_de_elements_erreur;
+	private static int nombre_de_erreurs_vues;
+	private static int nombre_total_elements_vus;
 	private static Date date_dernier_scan;
 	private static Instant date_derniere_modification_vue;
 	private static Path chemin_du_disque;
 	private static Path nom_du_disque;
+
+	private static StringProperty info_progress;
 	
-	private static int nombre_de_fichiers_copies;     
-	private static int nombre_de_dossiers_copies;
-	private static int nombre_elements_copies; 
 	
 	private int index;
 	
@@ -84,6 +93,10 @@ public class Gui_scan_controller implements Initializable {
 	
 	private FileVisitor<Path> fileVisitor ;
 	private FileVisitor<Path> scanVisitor ;
+	
+	
+	private Task<?> readWorker;
+	private Task<?> scanWorker;
 		
 	private void refreshList(){
 		
@@ -112,10 +125,8 @@ public class Gui_scan_controller implements Initializable {
 	}
 	@FXML
 	public void on_scanner_button(){
-		
+
 		Scan precedent = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
-		
-		System.out.println(precedent);
 
 		scan = new Scan();
 		scan.setDate(Date.from(Instant.now()));
@@ -135,17 +146,17 @@ public class Gui_scan_controller implements Initializable {
 		
 		scanId = scan.get_id();
 		
-		try {
-			System.out.println(chemin_du_disque);
-			System.out.println(nom_du_disque);
-			System.out.println(chemin_du_disque.resolve(nom_du_disque));
-			System.out.println(scanVisitor);
-			
-			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), scanVisitor);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		afficher_infos_disque();
+		scanWorker = createWorker();
+		
+
+		progress_label.textProperty().unbind();
+        progress_label.textProperty().bind(scanWorker.messageProperty());
+        
+        progress_progressBar.progressProperty().unbind();
+        progress_progressBar.progressProperty().bind(scanWorker.progressProperty());
+        
+		new Thread(scanWorker).start();
+		
 		
 	}
 	
@@ -153,8 +164,8 @@ public class Gui_scan_controller implements Initializable {
 		
 		nombre_de_fichiers_vus = 0;     
         nombre_de_dossiers_vus = 0;
-        nombre_elements_vus = 0; 
-        nombre_de_elements_erreur = 0;
+        nombre_total_elements_vus = 0; 
+        nombre_de_erreurs_vues = 0;
         
         date_derniere_modification_vue = Instant.EPOCH;
         Scan scan = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
@@ -169,8 +180,17 @@ public class Gui_scan_controller implements Initializable {
 		
 		date_dernier_scan_label.setText(date_dernier_scan != null ? date_dernier_scan.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString() : "Jamais");
 		date_derniere_modif_label.setText(date_derniere_modification_vue.atZone(ZoneId.systemDefault()).toLocalDate().toString());
-		nombre_elements_label.setText(String.format("%s / %s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus, nombre_de_elements_erreur));
+		nombre_elements_label.setText(String.format("%s / %s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus, nombre_de_erreurs_vues));
 		nb_scans_en_base_label.setText(scan != null ? scan.getNext() + " scans dans la base." : "0");
+		
+		nombre_total_elements_vus = nombre_de_fichiers_vus + nombre_de_dossiers_vus + nombre_de_erreurs_vues; 
+		
+		progress_label.textProperty().unbind();
+        progress_label.setText(" 0.0%");
+        
+        progress_progressBar.progressProperty().unbind();
+        progress_progressBar.setProgress(0.0);
+		
 	}
 	
 	public static void dossiers_vus_plus_1(){
@@ -179,9 +199,45 @@ public class Gui_scan_controller implements Initializable {
 	public static void fichiers_vus_plus_1(){
 		nombre_de_fichiers_vus ++;
 	}
-	public static void elements_erreur_plus_1(){
-		nombre_de_elements_erreur ++;
+	public static void erreurs_vues_plus_1(){
+		nombre_de_erreurs_vues ++;
 	}
+
+	
+	
+	public void maj_progres(){
+
+	}
+	
+	 public Task<?> createWorker() {
+        return new Task<Object>() {
+            @Override
+            protected Object call() throws Exception {
+            	
+            	Walk.init(nombre_total_elements_vus);
+            	
+            	Walk.pourcentageProperty().addListener(
+    		            (ObservableValue<? extends Number> ov, Number old_val, 
+    				            Number new_val) -> {
+    				            	updateMessage(Walk.getMessage());
+    				    			updateProgress(Double.parseDouble(new_val + "") * 100 , 100);
+    				            }
+    			);
+            	
+            	updateMessage(Walk.getMessage());
+    			updateProgress(Walk.getPourcentage_copie() * 100 , 100);
+                
+                try {
+
+        			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), scanVisitor);
+		
+        		} catch (IOException e) {
+        			e.printStackTrace();
+        		}
+                return true;
+            }
+        };
+	 }
 		
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -191,6 +247,8 @@ public class Gui_scan_controller implements Initializable {
 		
 		collec_disques = FXCollections.observableArrayList();
 		
+		info_progress = new SimpleStringProperty();
+
 		liste_disques_choiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
 
 		      @Override
@@ -209,7 +267,7 @@ public class Gui_scan_controller implements Initializable {
 		refreshList();
 	
 	}
-
+	 
 	public static Instant getDate_derniere_modification_vue() {
 		return date_derniere_modification_vue;
 	}
@@ -233,6 +291,16 @@ public class Gui_scan_controller implements Initializable {
 	public static void setNom_du_disque(Path nom_du_disque) {
 		Gui_scan_controller.nom_du_disque = nom_du_disque;
 	}
+
+	public static StringProperty getInfo_progress() {
+		return info_progress;
+	}
+
+	public static void setInfo_progress(StringProperty info_progress) {
+		Gui_scan_controller.info_progress = info_progress;
+	}
+	
+	
 	
 
 }

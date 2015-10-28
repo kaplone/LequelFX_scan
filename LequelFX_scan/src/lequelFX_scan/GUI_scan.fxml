@@ -68,7 +68,10 @@
 </BorderPane.margin></HBox>
 </top>
 <center><VBox prefHeight="290.0" prefWidth="780.0" BorderPane.alignment="CENTER">
-<children><HBox prefHeight="100.0" prefWidth="200.0" /><Label fx:id="progress_label" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="0 %" textAlignment="CENTER" /><ProgressBar fx:id="progress_progressBar" prefHeight="20.0" prefWidth="826.0" progress="0.0" />
+<children><HBox prefHeight="33.0" prefWidth="780.0" /><Label fx:id="progress_label" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="0 %" textAlignment="CENTER" /><ProgressBar fx:id="progress_progressBar" prefHeight="20.0" prefWidth="826.0" progress="0.0" /><Label fx:id="trace_label" text=".">
+<VBox.margin>
+<Insets top="30.0" />
+</VBox.margin></Label>
 </children>
 <BorderPane.margin>
 <Insets left="10.0" right="10.0" />
