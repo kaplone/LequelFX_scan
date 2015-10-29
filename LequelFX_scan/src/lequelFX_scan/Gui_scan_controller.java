@@ -108,9 +108,13 @@ public class Gui_scan_controller implements Initializable {
 			collec_disques.addAll(new File("/Volumes").list());
 			chemin_du_disque = Paths.get("/Volumes");
 		}
-		else {
+		else if(new File("/run/media/autor").isDirectory() && new File("/run/media/autor").list().length > 0) {
 			collec_disques.addAll(new File("/run/media/autor").list());
 			chemin_du_disque = Paths.get("/run/media/autor");
+		}
+		else{
+			collec_disques.addAll(new File("/mnt").list());
+			chemin_du_disque = Paths.get("/mnt");
 		}
 		
 		
@@ -135,7 +139,13 @@ public class Gui_scan_controller implements Initializable {
 		if (precedent != null){
 			scan.setNext(precedent.getNext() + 1);
 			precedent.setRang(precedent.getNext());
+			
+			System.out.println(precedent.get_id());
+			
+			MongoConn.getCollBase().update("{'scanned._id' : #}", precedent.get_id()).multi().with("{'$set' : {'scanned.rang' : #}}",precedent.getNext());
+			//MongoConn.getCollBase().update("{'scanned._id' : #}, {'$set' : {'scanned.rang' : -1}, {'multi' : 1}}", precedent.get_id());
 			MongoConn.getCollScans().update("{_id : #}", precedent.get_id()).with(precedent);
+			
 		}
 		else {
 			scan.setNext(1);	

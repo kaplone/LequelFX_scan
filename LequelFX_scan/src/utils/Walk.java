@@ -113,10 +113,15 @@ public class Walk {
 			}
 			else {
 				Gui_scan_controller.fichiers_vus_plus_1();
-				BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-				 if (attr.lastModifiedTime().toInstant().compareTo(Gui_scan_controller.getDate_derniere_modification_vue()) > 0){
-					 Gui_scan_controller.setDate_derniere_modification_vue(attr.lastModifiedTime().toInstant());
-				 }
+				try {
+					BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+					 if (attr.lastModifiedTime().toInstant().compareTo(Gui_scan_controller.getDate_derniere_modification_vue()) > 0){
+						 Gui_scan_controller.setDate_derniere_modification_vue(attr.lastModifiedTime().toInstant());
+					 }
+				}
+				catch (java.nio.file.NoSuchFileException nsfe){
+					System.out.println("erreur broken link :\n" + path);
+				}
 			}
 			return FileVisitResult.CONTINUE;
 		}
@@ -160,33 +165,40 @@ public class Walk {
 			}
 			else{
 				
-                BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+				try{
 				
-				Element element = new Element();
-				element.setFichier(false);
-				element.setNom(path.getFileName().toString().split("\\.")[0]);
-				element.setScan(Date.from(Instant.now()));
-				element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
-				element.setTaille(attr.size());
-				element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
+                    BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
 				
-				if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())
-				 && ! path.getParent().getFileName().equals(Gui_scan_controller.getNom_du_disque())		
-						){
 				
-					element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
-							                                                         "chemin",
-							                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
-							                                                         "scanned._id"),
-							                                                         Gui_scan_controller.getScanId())
-							                                  .as(Element.class).get_id().toString());
+					Element element = new Element();
+					element.setFichier(false);
+					element.setNom(path.getFileName().toString().split("\\.")[0]);
+					element.setScan(Date.from(Instant.now()));
+					element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
+					element.setTaille(attr.size());
+					element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
+					
+					if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())
+					 && ! path.getParent().getFileName().equals(Gui_scan_controller.getNom_du_disque())		
+							){
+					
+						element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
+								                                                         "chemin",
+								                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
+								                                                         "scanned._id"),
+								                                                         Gui_scan_controller.getScanId())
+								                                  .as(Element.class).get_id().toString());
+					}
+					//element.setScanned_id(Gui_scan_controller.getScanId());
+					element.setScanned(Gui_scan_controller.getScan());
+					
+					MongoConn.collBase.save(element);
+					
+					dossiers_copies_plus_1();
 				}
-				//element.setScanned_id(Gui_scan_controller.getScanId());
-				element.setScanned(Gui_scan_controller.getScan());
-				
-				MongoConn.collBase.save(element);
-				
-				dossiers_copies_plus_1();
+				catch (java.nio.file.NoSuchFileException nsfe){
+					System.out.println("erreur broken link :\n" + path);
+				}
 			}
 			return FileVisitResult.CONTINUE;
 		}
@@ -205,28 +217,33 @@ public class Walk {
 			}
 			else {
 				
-				BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-				
-				Element element = new Element();
-				element.setFichier(true);
-				element.setExtension(path.getFileName().toString().split("\\.").length > 1 ? path.getFileName().toString().split("\\.")[path.getFileName().toString().split("\\.").length -1] : "");
-				element.setNom(path.getFileName().toString().split("\\.")[0]);
-				element.setScan(Date.from(Instant.now()));
-				element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
-				element.setTaille(attr.size());
-				element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
-				element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
-						                                                         "chemin",
-						                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
-						                                                         "scanned._id"),
-						                                                         Gui_scan_controller.getScanId())
-						                                  .as(Element.class).get_id().toString());
-				//element.setScanned_id(Gui_scan_controller.getScanId());
-				element.setScanned(Gui_scan_controller.getScan());
-				
-				MongoConn.collBase.save(element);
-				
-				fichiers_copies_plus_1();
+				try {
+					BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+					
+					Element element = new Element();
+					element.setFichier(true);
+					element.setExtension(path.getFileName().toString().split("\\.").length > 1 ? path.getFileName().toString().split("\\.")[path.getFileName().toString().split("\\.").length -1] : "");
+					element.setNom(path.getFileName().toString().split("\\.")[0]);
+					element.setScan(Date.from(Instant.now()));
+					element.setDate(Date.from(attr.lastModifiedTime().toInstant()));
+					element.setTaille(attr.size());
+					element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
+					element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
+							                                                         "chemin",
+							                                                         "/" + Gui_scan_controller.getChemin_du_disque().relativize(path.getParent()).toString(),
+							                                                         "scanned._id"),
+							                                                         Gui_scan_controller.getScanId())
+							                                  .as(Element.class).get_id().toString());
+					//element.setScanned_id(Gui_scan_controller.getScanId());
+					element.setScanned(Gui_scan_controller.getScan());
+					
+					MongoConn.collBase.save(element);
+					
+					fichiers_copies_plus_1();
+				}
+				catch (java.nio.file.NoSuchFileException nsfe){
+					System.out.println("erreur broken link :\n" + path);
+				}
 
 			}
 			return FileVisitResult.CONTINUE;
