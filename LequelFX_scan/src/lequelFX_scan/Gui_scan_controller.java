@@ -179,6 +179,7 @@ public class Gui_scan_controller implements Initializable {
 		new Thread(scanWorker).start();
 		
 		
+		
 	}
 	
 	public void afficher_infos_disque(){
@@ -300,6 +301,18 @@ public class Gui_scan_controller implements Initializable {
     				            Number new_val) -> {
     				            	updateMessage(Walk.getMessage());
     				    			updateProgress(Double.parseDouble(new_val + "") * 100 , 100);
+    				    			
+    				    			if(Double.parseDouble(new_val + "") == 1){
+    				    				
+    				    				System.out.println("complet");
+    				    				
+    				    				Scan scan = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
+    				    		        date_dernier_scan = scan != null ? scan.getDate() : null;
+    				    				date_dernier_scan_label.setText(date_dernier_scan != null ? date_dernier_scan.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString() : "Jamais");
+    				    				
+    				    				// pas thread-safe : Exception in thread "Thread-5" java.lang.IllegalStateException: Not on FX application thread; currentThread = Thread-5
+    				    				//nb_scans_en_base_label.setText(scan.getNext() + "");
+    				    			}
     				            }
     			);
             	
@@ -320,6 +333,8 @@ public class Gui_scan_controller implements Initializable {
 		
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
+		
+//		Platform.setImplicitExit(false);
 		
 		fileVisitor = new Walk.FileSizeVisitor();
 		scanVisitor = new Walk.FileScanVisitor();

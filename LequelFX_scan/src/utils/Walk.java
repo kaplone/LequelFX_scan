@@ -232,8 +232,6 @@ public class Walk {
 		@Override
 		public FileVisitResult preVisitDirectory(Path path,
 				BasicFileAttributes attrs) throws IOException {
-			
-			System.out.println("dirVisit : " + path);
 
 			if (path.getFileName().toString().startsWith(".")
 			 || path.getFileName().toString().startsWith("@")
