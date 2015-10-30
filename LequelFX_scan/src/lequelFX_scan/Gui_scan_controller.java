@@ -16,6 +16,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.bson.types.ObjectId;
 
@@ -39,7 +44,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+
 import models.Scan;
+
 import utils.MongoConn;
 import utils.Walk;
 
@@ -92,6 +99,7 @@ public class Gui_scan_controller implements Initializable {
 	private static ObjectId scanId;
 	
 	private FileVisitor<Path> fileVisitor ;
+	private FileVisitor<Path> dateVisitor ;
 	private FileVisitor<Path> scanVisitor ;
 	
 	
@@ -129,6 +137,9 @@ public class Gui_scan_controller implements Initializable {
 	}
 	@FXML
 	public void on_scanner_button(){
+		
+		nombre_total_elements_vus = Walk.nombre_total_elementsProperty().get(); 
+		Walk.init(nombre_total_elements_vus);
 
 		Scan precedent = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
 
@@ -143,7 +154,6 @@ public class Gui_scan_controller implements Initializable {
 			System.out.println(precedent.get_id());
 			
 			MongoConn.getCollBase().update("{'scanned._id' : #}", precedent.get_id()).multi().with("{'$set' : {'scanned.rang' : #}}",precedent.getNext());
-			//MongoConn.getCollBase().update("{'scanned._id' : #}, {'$set' : {'scanned.rang' : -1}, {'multi' : 1}}", precedent.get_id());
 			MongoConn.getCollScans().update("{_id : #}", precedent.get_id()).with(precedent);
 			
 		}
@@ -157,7 +167,7 @@ public class Gui_scan_controller implements Initializable {
 		scanId = scan.get_id();
 		scan = scan;
 		
-		scanWorker = createWorker();
+		scanWorker = createScanWorker();
 		
 
 		progress_label.textProperty().unbind();
@@ -172,36 +182,53 @@ public class Gui_scan_controller implements Initializable {
 	}
 	
 	public void afficher_infos_disque(){
-		
+
 		nombre_de_fichiers_vus = 0;     
         nombre_de_dossiers_vus = 0;
         nombre_total_elements_vus = 0; 
         nombre_de_erreurs_vues = 0;
-        
-        date_derniere_modification_vue = Instant.EPOCH;
-        Scan scan = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
-        date_dernier_scan = scan != null ? scan.getDate() : null;
-
-		
-		try {
-			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), fileVisitor);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		date_dernier_scan_label.setText(date_dernier_scan != null ? date_dernier_scan.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString() : "Jamais");
-		date_derniere_modif_label.setText(date_derniere_modification_vue.atZone(ZoneId.systemDefault()).toLocalDate().toString());
-		nombre_elements_label.setText(String.format("%s / %s / %s", nombre_de_dossiers_vus, nombre_de_fichiers_vus, nombre_de_erreurs_vues));
-		nb_scans_en_base_label.setText(scan != null ? scan.getNext() + " scans dans la base." : "0");
-		
-		nombre_total_elements_vus = nombre_de_fichiers_vus + nombre_de_dossiers_vus + nombre_de_erreurs_vues; 
-		
+        		
 		progress_label.textProperty().unbind();
         progress_label.setText(" 0.0%");
         
         progress_progressBar.progressProperty().unbind();
         progress_progressBar.setProgress(0.0);
+        
+        date_derniere_modification_vue = Instant.EPOCH;
+        Scan scan = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
+        date_dernier_scan = scan != null ? scan.getDate() : null;
+
+		date_dernier_scan_label.setText(date_dernier_scan != null ? date_dernier_scan.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString() : "Jamais");
 		
+		nb_scans_en_base_label.setText(scan != null ? scan.getNext() + " scans dans la base." : "0");
+        
+        readWorker = createCheckWorker();
+        
+        nombre_elements_label.textProperty().unbind();
+        nombre_elements_label.textProperty().bind(readWorker.messageProperty());
+        
+        date_derniere_modif_label.textProperty().unbind();
+        date_derniere_modif_label.textProperty().bind(readWorker.titleProperty());
+		
+		// parcours pour le nombre de fichiers /dossiers /erreurs
+        new Thread(readWorker).start();
+         
+        
+        // parcours pour la date du dernier scan
+//		ExecutorService executor = Executors.newFixedThreadPool(1);
+//        Future<Instant> future_date_derniere_modification_vue = executor.submit(readTask);
+//        
+//        try {
+//          // appel à .get() bloquant   (!!!)     
+//			date_derniere_modif_label.setText(future_date_derniere_modification_vue.get().atZone(ZoneId.systemDefault()).toLocalDate().toString());
+//			
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	
 	public static void dossiers_vus_plus_1(){
@@ -213,14 +240,55 @@ public class Gui_scan_controller implements Initializable {
 	public static void erreurs_vues_plus_1(){
 		nombre_de_erreurs_vues ++;
 	}
+	
+	Callable<Instant> readTask = () -> {
+		Walk.init();
 
+    	try {
+    		
+			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), dateVisitor);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
+    	return date_derniere_modification_vue;
+		
+	};
 	
-	
-	public void maj_progres(){
+	public Task<?> createCheckWorker() {
 
-	}
+        return new Task<Object>() {
+            @Override
+            protected Object call() throws Exception {
+            	
+            	Walk.init();
+            	
+            	Walk.nombre_total_elementsProperty().addListener(
+    		            (ObservableValue<? extends Number> ov, Number old_val, 
+    				            Number new_val) -> {
+    				            	updateMessage(Walk.getMessageCheck());
+    				            }
+    			);
+            	
+            	Walk.date_derniere_modification_vueProperty().addListener(
+    		            (ObservableValue<? extends Number> ov, Number old_val, 
+    				            Number new_val) -> {
+    				            	updateTitle(Walk.date_derniere_modification_vue_string());
+    				            }
+    			);
+            	
+            	updateValue(Walk.getMessageCheck());
+            	try {
+            		
+        			Files.walkFileTree(chemin_du_disque.resolve(nom_du_disque), fileVisitor);
+        		} catch (IOException e) {
+        			e.printStackTrace();
+        		}	
+            	return true;
+            }
+        };
+	 }
 	
-	 public Task<?> createWorker() {
+	 public Task<?> createScanWorker() {
         return new Task<Object>() {
             @Override
             protected Object call() throws Exception {
@@ -255,6 +323,7 @@ public class Gui_scan_controller implements Initializable {
 		
 		fileVisitor = new Walk.FileSizeVisitor();
 		scanVisitor = new Walk.FileScanVisitor();
+		dateVisitor = new Walk.FileDateVisitor();
 		
 		collec_disques = FXCollections.observableArrayList();
 		
