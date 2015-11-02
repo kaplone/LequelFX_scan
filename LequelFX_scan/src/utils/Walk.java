@@ -29,6 +29,14 @@ import models.Message;
 
 public class Walk {
 	
+	//////////////////////////////////:
+	//
+	// attention, changer l'id pour id_pere
+	// codé en dur (ligne 364)
+	// en cas de réinitialisation de la base
+	//
+	///////////////////////////////////
+	
 	private static IntegerProperty nombre_de_fichiers_vus;     
 	private static IntegerProperty nombre_de_dossiers_vus;
 	private static IntegerProperty nombre_de_erreurs_vus; 
@@ -343,9 +351,7 @@ public class Walk {
 					element.setTaille(attr.size());
 					element.setChemin("/" + Gui_scan_controller.getChemin_du_disque().relativize(path).toString());
 					
-					if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())
-					 && ! path.getParent().getFileName().equals(Gui_scan_controller.getNom_du_disque())		
-							){
+					if (! path.getFileName().equals(Gui_scan_controller.getNom_du_disque())){
 					
 						element.setId_pere(MongoConn.getCollBase().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : #}",
 								                                                         "chemin",
@@ -354,6 +360,10 @@ public class Walk {
 								                                                         Gui_scan_controller.getScanId())
 								                                  .as(Element.class).get_id().toString());
 					}
+					else {
+						element.setId_pere("56373c7a7c3b8f047992f94e");
+					}
+					
 					//element.setScanned_id(Gui_scan_controller.getScanId());
 					element.setScanned(Gui_scan_controller.getScan());
 					
