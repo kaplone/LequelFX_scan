@@ -31,7 +31,7 @@ public class MongoConn {
 		mongoclient = new MongoClient( "192.168.0.201" , 27017 );
 		
 	
-		db = mongoclient.getDB("LequelFX");
+		db = mongoclient.getDB("LequelFX_test");
 		jongo = new Jongo(db);
 		collBase = jongo.getCollection(base);
 		collScans = jongo.getCollection(scans);

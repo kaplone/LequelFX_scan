@@ -51,6 +51,8 @@ public class Walk {
 	
 	private static LongProperty date_derniere_modification_vue;
 	
+	private static Path chemin_initial;
+	private static Gui_scan_controller controller;
 	
 	private static String message; 
 	private static String messageCheck;
@@ -76,7 +78,10 @@ public class Walk {
 		nombre_de_erreurs_copies.set(nombre_de_erreurs_copies.get() + 1);
 	}
 	
-	public static void init(){
+	public static void init(Gui_scan_controller gui_controller, Path chemin_initial_){
+		
+		chemin_initial = chemin_initial_;
+		controller = gui_controller;
 		
 		message = "0 / 0 / 0";
 		//messageCheck = new Message();
@@ -226,6 +231,7 @@ public class Walk {
 		@Override
 		public FileVisitResult postVisitDirectory(Path path, IOException exc)
 				throws IOException {
+
 			return FileVisitResult.CONTINUE;
 		}
 		
@@ -318,6 +324,15 @@ public class Walk {
 		@Override
 		public FileVisitResult postVisitDirectory(Path path, IOException exc)
 				throws IOException {
+			
+            System.out.println(path);
+			
+			if (path.equals(chemin_initial)){
+				System.out.println("teminé !!");
+				//controller.getScanner_button().setVisible(true);
+				Message.getBouton().setVisible(true);
+			}
+			
 			return FileVisitResult.CONTINUE;
 		}
 	}

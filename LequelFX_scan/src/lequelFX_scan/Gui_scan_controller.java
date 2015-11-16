@@ -44,7 +44,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-
+import models.Message;
 import models.Scan;
 
 import utils.MongoConn;
@@ -142,6 +142,8 @@ public class Gui_scan_controller implements Initializable {
 		Walk.init(nombre_total_elements_vus);
 
 		Scan precedent = MongoConn.getCollScans().findOne(String.format("{\"%s\" : \"%s\", \"%s\" : 0}", "disque", nom_du_disque.toString(), "rang")).as(Scan.class);
+		
+		scanner_button.setVisible(false);
 
 		scan = new Scan();
 		scan.setDate(Date.from(Instant.now()));
@@ -243,7 +245,7 @@ public class Gui_scan_controller implements Initializable {
 	}
 	
 	Callable<Instant> readTask = () -> {
-		Walk.init();
+		Walk.init(this, chemin_du_disque.resolve(nom_du_disque));
 
     	try {
     		
@@ -261,7 +263,7 @@ public class Gui_scan_controller implements Initializable {
             @Override
             protected Object call() throws Exception {
             	
-            	Walk.init();
+            	Walk.init(Message.getController(), chemin_du_disque.resolve(nom_du_disque));
             	
             	Walk.nombre_total_elementsProperty().addListener(
     		            (ObservableValue<? extends Number> ov, Number old_val, 
@@ -336,9 +338,14 @@ public class Gui_scan_controller implements Initializable {
 		
 //		Platform.setImplicitExit(false);
 		
+		Message.setController(this);
+		
 		fileVisitor = new Walk.FileSizeVisitor();
 		scanVisitor = new Walk.FileScanVisitor();
 		dateVisitor = new Walk.FileDateVisitor();
+		
+		scanner_button.setVisible(false);
+		Message.setBouton(scanner_button);
 		
 		collec_disques = FXCollections.observableArrayList();
 		
@@ -348,8 +355,11 @@ public class Gui_scan_controller implements Initializable {
 
 		      @Override
 		      public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-  
+		    	  
+		    	scanner_button.setVisible(false);
+		    	
 		        if ((int) number2 != 0){
+		        	
 		        	nom_du_disque = Paths.get(collec_disques.get((int) number2)); 
 					afficher_infos_disque();
 				}
@@ -410,8 +420,13 @@ public class Gui_scan_controller implements Initializable {
 	public static void setScan(Scan scan) {
 		Gui_scan_controller.scan = scan;
 	}
-	
-	
-	
+
+	public Button getScanner_button() {
+		return scanner_button;
+	}
+
+	public void setScanner_button(Button scanner_button) {
+		this.scanner_button = scanner_button;
+	}
 
 }
