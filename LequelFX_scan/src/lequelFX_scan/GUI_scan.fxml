@@ -5,8 +5,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lequelFX_scan.Gui_scan_controller">
-<top><HBox prefHeight="172.0" prefWidth="780.0" BorderPane.alignment="CENTER">
+<BorderPane prefHeight="617.0" prefWidth="987.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lequelFX_scan.Gui_scan_controller">
+<top><HBox prefHeight="172.0" prefWidth="780.0" spacing="20.0" BorderPane.alignment="CENTER">
 <children>
 <VBox>
 <children><ChoiceBox fx:id="liste_disques_choiceBox" prefHeight="25.0" prefWidth="306.0" /><HBox prefHeight="100.0" prefWidth="200.0">
@@ -23,6 +23,12 @@
 </HBox.margin></Button>
 </children>
 </HBox>
+</children>
+</VBox><VBox prefHeight="172.0" prefWidth="271.0" spacing="20.0">
+<children>
+<ComboBox fx:id="tag_combobox" editable="true" prefHeight="25.0" prefWidth="274.0" promptText="choisir un tag" />
+<ComboBox fx:id="taille_disque_combobox" editable="true" prefHeight="25.0" prefWidth="274.0" promptText="choisir une taille de disque" />
+<ComboBox fx:id="taille_restante_combobox" editable="true" prefHeight="25.0" prefWidth="274.0" promptText="choisir une taille restante" />
 </children>
 </VBox><VBox prefHeight="128.0" prefWidth="476.0">
 <children><HBox prefHeight="100.0" prefWidth="200.0">
@@ -68,7 +74,7 @@
 </BorderPane.margin></HBox>
 </top>
 <center><VBox prefHeight="290.0" prefWidth="780.0" BorderPane.alignment="CENTER">
-<children><HBox prefHeight="33.0" prefWidth="780.0" /><Label fx:id="progress_label" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="0 %" textAlignment="CENTER" /><ProgressBar fx:id="progress_progressBar" prefHeight="20.0" prefWidth="826.0" progress="0.0" /><Label fx:id="trace_label" text=".">
+<children><HBox prefHeight="33.0" prefWidth="780.0" /><Label fx:id="progress_label" alignment="CENTER" prefHeight="15.0" prefWidth="798.0" text="0 %" textAlignment="CENTER" /><ProgressBar fx:id="progress_progressBar" prefHeight="20.0" prefWidth="985.0" progress="0.0" /><Label fx:id="trace_label" text=".">
 <VBox.margin>
 <Insets top="30.0" />
 </VBox.margin></Label>
@@ -78,6 +84,6 @@
 </BorderPane.margin></VBox>
 </center>
 <bottom><HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-<children><TreeView fx:id="tree" prefHeight="100.0" prefWidth="804.0" />
+<children><TreeView fx:id="tree" prefHeight="100.0" prefWidth="998.0" />
 </children></HBox>
 </bottom></BorderPane>

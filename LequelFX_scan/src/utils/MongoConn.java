@@ -21,10 +21,11 @@ public class MongoConn {
 	static DB db;
 	static MongoCollection collBase;
 	static MongoCollection collScans;
+	static MongoCollection collBoxes;
 	
 	private static Jongo jongo;
 	
-	public static void connecter(String base, String scans){
+	public static void connecter(String base, String scans, String boxes){
 		
 		
 
@@ -35,6 +36,7 @@ public class MongoConn {
 		jongo = new Jongo(db);
 		collBase = jongo.getCollection(base);
 		collScans = jongo.getCollection(scans);
+		collBoxes = jongo.getCollection(boxes);
 		
 	}
 
@@ -53,5 +55,15 @@ public class MongoConn {
 	public static void setCollScans(MongoCollection collScans) {
 		MongoConn.collScans = collScans;
 	}
+
+	public static MongoCollection getCollBoxes() {
+		return collBoxes;
+	}
+
+	public static void setCollBoxes(MongoCollection collBoxes) {
+		MongoConn.collBoxes = collBoxes;
+	}
+	
+	
 
 }

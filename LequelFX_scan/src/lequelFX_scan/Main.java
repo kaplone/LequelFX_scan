@@ -11,7 +11,7 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			Scene scene = new Scene((Parent) JfxUtils.loadFxml("GUI_scan.fxml"), 800, 600);
+			Scene scene = new Scene((Parent) JfxUtils.loadFxml("GUI_scan.fxml"), 1000, 600);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			primaryStage.setScene(scene);
 			primaryStage.show();
