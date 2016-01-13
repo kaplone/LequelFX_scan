@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.jongo.MongoCursor;
@@ -173,17 +175,18 @@ public class Gui_scan_controller implements Initializable {
 		}
 		else {
 			scan.setNext(1);	
+			scan.setRang(0);
 		}
-		scan.setRang(0);
+		
 		scan.setTag(tag_combobox.getSelectionModel().getSelectedItem());
 		scan.setTaille_disque(taille_disque_combobox.getSelectionModel().getSelectedItem());
 		scan.setTaille_restante(taille_restante_combobox.getSelectionModel().getSelectedItem());
 		
 		MongoConn.getCollScans().save(scan);
 
-  	    boxes.getTags().add(tag_combobox.getSelectionModel().getSelectedItem());
-  	    boxes.getTaille_disques().add(taille_disque_combobox.getSelectionModel().getSelectedItem());
-  	    boxes.getTaille_restantes().add(taille_restante_combobox.getSelectionModel().getSelectedItem());
+  	    boxes.addTag(tag_combobox.getSelectionModel().getSelectedItem());
+  	    boxes.addTaille_disque(taille_disque_combobox.getSelectionModel().getSelectedItem());
+  	    boxes.addTaille_restante(taille_restante_combobox.getSelectionModel().getSelectedItem());
         MongoConn.getCollBoxes().save(boxes);
 		
 		scanId = scan.get_id();
@@ -404,29 +407,27 @@ public class Gui_scan_controller implements Initializable {
 			boxes = new ComboBoxes();
 		}
 		
-		collec_tags.addAll(boxes.getTags());
-		collec_tailles_disques.addAll(boxes.getTaille_disques());
-		collec_tailles_restantes.addAll(boxes.getTaille_restantes());
+		collec_tags.addAll(boxes.getTags()
+				                .stream()
+				                .filter(a -> a != null)
+				                .sorted()
+				                .collect(Collectors.toList()));
 		
-		System.out.println("tag_combobox : " + tag_combobox);
+		collec_tailles_disques.addAll(boxes.getTaille_disques()
+                                           .stream()
+                                           .filter(a -> a != null)
+                                           .sorted()
+                                           .collect(Collectors.toList()));
+		
+		collec_tailles_restantes.addAll(boxes.getTaille_restantes()
+                                             .stream()
+                                             .filter(a -> a != null)
+                                             .sorted()
+                                             .collect(Collectors.toList()));
 		
 		tag_combobox.setItems(collec_tags);
 		taille_disque_combobox.setItems(collec_tailles_disques);
 		taille_restante_combobox.setItems(collec_tailles_restantes);
-		
-//		tag_combobox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-//
-//		      @Override
-//		      public void changed(ObservableValue<? extends String> observableValue, String value, String value2) {
-//		    	  
-//		    	  int size = boxes.getTags().size();
-//		    	  boxes.getTags().add(value2);
-//		    	  
-//		    	  if(size < boxes.getTags().size()){
-//		    		  MongoConn.getCollBase().save(boxes);
-//		    	  } 
-//		      }
-//		 });
 
 		liste_disques_choiceBox.setItems(collec_disques);
 		refreshList();

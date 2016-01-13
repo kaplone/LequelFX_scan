@@ -40,6 +40,19 @@ public class ComboBoxes extends Commun {
 		this.taille_restantes = taille_restantes;
 	}
 	
+	public Set<String> addTag(String s){
+		tags.add(s);
+		return tags;
+	}
 	
+	public Set<String> addTaille_disque(String s){
+		taille_disques.add(s);
+		return taille_disques;
+	}
+	
+	public Set<String> addTaille_restante(String s){
+		taille_restantes.add(s);
+		return taille_restantes;
+	}
 
 }
