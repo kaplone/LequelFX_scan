@@ -107,6 +107,10 @@ public class Gui_scan_controller implements Initializable {
 	
 	private ComboBoxes boxes;
 	
+	private String tag_;
+	private String taille_disque_;
+	private String taille_restante_;
+	
 	private int index;
 	
 	private static Scan scan;
@@ -178,10 +182,6 @@ public class Gui_scan_controller implements Initializable {
 			scan.setRang(0);
 		}
 		
-		String tag_ = tag_combobox.getSelectionModel().getSelectedItem();
-		String taille_disque_ = taille_disque_combobox.getSelectionModel().getSelectedItem();
-		String taille_restante_ = taille_restante_combobox.getSelectionModel().getSelectedItem();
-		
 		System.out.println("tag_ : " + tag_);
 		System.out.println("taille_disque_ : " + taille_disque_);
 		System.out.println("taille_restante_ : " + taille_restante_);
@@ -193,9 +193,10 @@ public class Gui_scan_controller implements Initializable {
 		
 		MongoConn.getCollScans().save(scan);
 
-  	    boxes.addTag(tag_combobox.getValue());
-  	    boxes.addTaille_disque(taille_disque_combobox.getValue());
-  	    boxes.addTaille_restante(taille_restante_combobox.getValue());
+  	    boxes.addTag(tag_);
+  	    boxes.addTaille_disque(taille_disque_);
+  	    boxes.addTaille_restante(taille_restante_);
+  	    
   	    System.out.println("box : " + boxes.getTaille_restantes());
   	    
         MongoConn.getCollBoxes().save(boxes);
@@ -222,9 +223,13 @@ public class Gui_scan_controller implements Initializable {
                                 .sorted()
                                 .collect(Collectors.toList()));
  
-tag_combobox.setItems(collec_tags);
-taille_disque_combobox.setItems(collec_tailles_disques);
-taille_restante_combobox.setItems(collec_tailles_restantes);
+        tag_combobox.setItems(collec_tags);
+        taille_disque_combobox.setItems(collec_tailles_disques);
+        taille_restante_combobox.setItems(collec_tailles_restantes);
+        
+        tag_combobox.getSelectionModel().select(tag_);
+        taille_disque_combobox.getSelectionModel().select(taille_disque_);
+        taille_restante_combobox.getSelectionModel().select(taille_restante_);
 		
 		scanId = scan.get_id();
 	
@@ -468,6 +473,25 @@ taille_restante_combobox.setItems(collec_tailles_restantes);
 
 		liste_disques_choiceBox.setItems(collec_disques);
 		refreshList();
+		
+		tag_combobox.valueProperty().addListener(new ChangeListener<String>() {
+            @Override 
+            public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
+                tag_ = t1;                
+            }    
+        });
+		taille_disque_combobox.valueProperty().addListener(new ChangeListener<String>() {
+            @Override 
+            public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
+            	taille_disque_ = t1;                
+            }    
+        });
+		taille_restante_combobox.valueProperty().addListener(new ChangeListener<String>() {
+            @Override 
+            public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
+            	taille_restante_ = t1;                
+            }    
+        });
 	
 	}
 	 
