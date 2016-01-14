@@ -178,16 +178,53 @@ public class Gui_scan_controller implements Initializable {
 			scan.setRang(0);
 		}
 		
-		scan.setTag(tag_combobox.getSelectionModel().getSelectedItem());
-		scan.setTaille_disque(taille_disque_combobox.getSelectionModel().getSelectedItem());
-		scan.setTaille_restante(taille_restante_combobox.getSelectionModel().getSelectedItem());
+		String tag_ = tag_combobox.getSelectionModel().getSelectedItem();
+		String taille_disque_ = taille_disque_combobox.getSelectionModel().getSelectedItem();
+		String taille_restante_ = taille_restante_combobox.getSelectionModel().getSelectedItem();
+		
+		System.out.println("tag_ : " + tag_);
+		System.out.println("taille_disque_ : " + taille_disque_);
+		System.out.println("taille_restante_ : " + taille_restante_);
+		
+		
+		scan.setTag(tag_);
+		scan.setTaille_disque(taille_disque_);
+		scan.setTaille_restante(taille_restante_);
 		
 		MongoConn.getCollScans().save(scan);
 
-  	    boxes.addTag(tag_combobox.getSelectionModel().getSelectedItem());
-  	    boxes.addTaille_disque(taille_disque_combobox.getSelectionModel().getSelectedItem());
-  	    boxes.addTaille_restante(taille_restante_combobox.getSelectionModel().getSelectedItem());
+  	    boxes.addTag(tag_combobox.getValue());
+  	    boxes.addTaille_disque(taille_disque_combobox.getValue());
+  	    boxes.addTaille_restante(taille_restante_combobox.getValue());
+  	    System.out.println("box : " + boxes.getTaille_restantes());
+  	    
         MongoConn.getCollBoxes().save(boxes);
+        
+        collec_tags.clear();
+        collec_tailles_disques.clear();
+        collec_tailles_restantes.clear();
+        
+        collec_tags.addAll(boxes.getTags()
+                   .stream()
+                   .filter(a -> a != null)
+                   .sorted()
+                   .collect(Collectors.toList()));
+
+        collec_tailles_disques.addAll(boxes.getTaille_disques()
+                              .stream()
+                              .filter(a -> a != null)
+                              .sorted()
+                              .collect(Collectors.toList()));
+
+        collec_tailles_restantes.addAll(boxes.getTaille_restantes()
+                                .stream()
+                                .filter(a -> a != null)
+                                .sorted()
+                                .collect(Collectors.toList()));
+ 
+tag_combobox.setItems(collec_tags);
+taille_disque_combobox.setItems(collec_tailles_disques);
+taille_restante_combobox.setItems(collec_tailles_restantes);
 		
 		scanId = scan.get_id();
 	
