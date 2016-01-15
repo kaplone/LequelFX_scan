@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.jongo.MongoCursor;
 
+import com.sun.javafx.property.adapter.PropertyDescriptor.Listener;
+
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -123,6 +125,11 @@ public class Gui_scan_controller implements Initializable {
 	
 	private Task<?> readWorker;
 	private Task<?> scanWorker;
+	
+	private ChangeListener<String> tag_listener;
+	private ChangeListener<String> taille_disque_listener;
+	private ChangeListener<String> taille_restante_listener;
+	
 		
 	private void refreshList(){
 		
@@ -197,9 +204,11 @@ public class Gui_scan_controller implements Initializable {
   	    boxes.addTaille_disque(taille_disque_);
   	    boxes.addTaille_restante(taille_restante_);
   	    
-  	    System.out.println("box : " + boxes.getTaille_restantes());
-  	    
         MongoConn.getCollBoxes().save(boxes);
+        
+        tag_combobox.getEditor().textProperty().removeListener(tag_listener);
+		taille_disque_combobox.getEditor().textProperty().removeListener(taille_disque_listener);
+		taille_restante_combobox.getEditor().textProperty().removeListener(taille_restante_listener);
         
         collec_tags.clear();
         collec_tailles_disques.clear();
@@ -227,9 +236,17 @@ public class Gui_scan_controller implements Initializable {
         taille_disque_combobox.setItems(collec_tailles_disques);
         taille_restante_combobox.setItems(collec_tailles_restantes);
         
+        System.out.println("_ tag_ : " + tag_);
+		System.out.println("_ taille_disque_ : " + taille_disque_);
+		System.out.println("_ taille_restante_ : " + taille_restante_);
+        
         tag_combobox.getSelectionModel().select(tag_);
         taille_disque_combobox.getSelectionModel().select(taille_disque_);
         taille_restante_combobox.getSelectionModel().select(taille_restante_);
+        
+        tag_combobox.getEditor().textProperty().addListener(tag_listener);
+		taille_disque_combobox.getEditor().textProperty().addListener(taille_disque_listener);
+		taille_restante_combobox.getEditor().textProperty().addListener(taille_restante_listener);
 		
 		scanId = scan.get_id();
 	
@@ -474,24 +491,32 @@ public class Gui_scan_controller implements Initializable {
 		liste_disques_choiceBox.setItems(collec_disques);
 		refreshList();
 		
-		tag_combobox.valueProperty().addListener(new ChangeListener<String>() {
+		tag_listener = new ChangeListener<String>() {
             @Override 
             public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
                 tag_ = t1;                
             }    
-        });
-		taille_disque_combobox.valueProperty().addListener(new ChangeListener<String>() {
+        };
+        
+        taille_disque_listener = new ChangeListener<String>() {
             @Override 
             public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
-            	taille_disque_ = t1;                
+                taille_disque_ = t1;                
             }    
-        });
-		taille_restante_combobox.valueProperty().addListener(new ChangeListener<String>() {
+        };
+        
+        taille_restante_listener = new ChangeListener<String>() {
             @Override 
             public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
             	taille_restante_ = t1;                
             }    
-        });
+        };
+		
+      //taille_disque_combobox.valueProperty().addListener(new ChangeListener<String>() {
+        
+		tag_combobox.getEditor().textProperty().addListener(tag_listener);	
+		taille_disque_combobox.getEditor().textProperty().addListener(taille_disque_listener);
+		taille_restante_combobox.getEditor().textProperty().addListener(taille_restante_listener);
 	
 	}
 	 
