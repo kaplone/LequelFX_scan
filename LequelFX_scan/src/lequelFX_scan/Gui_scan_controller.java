@@ -507,7 +507,8 @@ public class Gui_scan_controller implements Initializable {
         
         taille_restante_listener = new ChangeListener<String>() {
             @Override 
-            public void changed(ObservableValue<? extends String>  ov, String t, String t1) {                
+            public void changed(ObservableValue<? extends String>  ov, String t, String t1) {
+            	System.out.println(t1);               
             	taille_restante_ = t1;                
             }    
         };
